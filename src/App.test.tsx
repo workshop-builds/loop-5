@@ -26,6 +26,18 @@ describe('step grid', () => {
     expect(container.querySelector('[data-beat="1"]')!.querySelectorAll('button')).toHaveLength(4)
   })
 
+  it('shows Tap to start before the first gesture, and Play', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: 'Tap to start' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
+  })
+
+  it('reports missing audio without crashing', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+    expect(await screen.findByRole('alert')).toBeTruthy()
+  })
+
   it('Clear empties the grid', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Snare step 5, off' }))

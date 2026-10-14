@@ -26,3 +26,8 @@ Why: keeps the page simple and testable; later sessions keep both in sync until 
 
 Decision: removed `src/plan.ts` and the project page test; PLAN.md is now the only copy of the milestone list.
 Why: the plan said the project page gives way to the drum machine screen; keeping a mirror would only drift.
+
+## 2026-10-14: Scheduler is separate from Web Audio
+
+Decision: the scheduler takes an injected clock and an `onStep(step, time)` callback; only `engine.ts` touches AudioContext. The playhead follows a queue of scheduled step times against `ctx.currentTime`.
+Why: the step sequence can be unit tested with a mocked clock, and the highlight matches what is heard rather than what is scheduled ahead.
