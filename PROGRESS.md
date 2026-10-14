@@ -19,3 +19,13 @@ Next: Milestone 1, step grid and pattern model.
 - Component tests: render, toggle, grouping, Clear. `npm test` (8 tests) and `npm run build` pass.
 
 Next: Milestone 2, sound, play/stop and playhead.
+
+## Review of milestone 1
+
+Approved.
+
+- Pattern model (`src/pattern.ts`): the 8 named rows × 16 steps, pure `createPattern` and immutable `toggleCell` (out of range does nothing), with 4 unit tests.
+- Grid: 8×16 with row labels, steps grouped in fours (`data-beat` groups with wider gaps and alternating shades), the on state is lime-400 on dark neutral (high contrast), and a Clear button resets the pattern.
+- Cells are `<button>`s with `aria-label` (e.g. "Kick step 1, on") and `aria-pressed`, fixed at `h-10 w-10 shrink-0` (40×40 px), inside an `overflow-x-auto` container so the grid scrolls on 375 px screens.
+- Component tests: render, toggle, grouping, Clear. Workflow results for this commit: `npm test` (8 passed) and `npm run build` pass.
+- No wallet, signature, seed-phrase or holdings-gated features; no network requests.
