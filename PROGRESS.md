@@ -37,3 +37,15 @@ Approved.
 - Tests: step timing math and scheduler sequence with a mocked clock, plus UI tests. `npm test` (13 tests) and `npm run build` pass.
 
 Next: Milestone 3, tempo, swing and row volume.
+
+## Review of milestone 2
+
+Approved.
+
+- Voices (`src/voices.ts`): eight voices built only from oscillators, a generated noise buffer, biquad filters and gain envelopes, in the same order as `ROWS`. No audio files, no `fetch` and no external URLs in `src/`.
+- Scheduler (`src/scheduler.ts`): look-ahead on the audio clock (`now` is `ctx.currentTime` in `engine.ts`). It ticks every 25 ms with a 100 ms window and loops over 16 steps at `DEFAULT_BPM` = 120.
+- Play/Stop button. The playhead is a white ring on the current column. It follows a queue of scheduled step times compared with `ctx.currentTime`, so it matches what is heard.
+- "Tap to start" button and hint show until audio is unlocked. The AudioContext (with a `webkitAudioContext` fallback) is created and resumed inside the tap or click handler. Play also unlocks, and it resumes again if the context was suspended, which covers mobile browsers. An alert shows if Web Audio is missing.
+- The engine reads the pattern through a ref at schedule time, so edits are heard on the next pass (at most 100 ms ahead).
+- Tests: `stepDuration` at 60, 120 and 180 BPM; the scheduler's step order, wrap after 16, spacing and look-ahead window with a mocked clock and fake timers; UI tests for Tap to start, Play and missing audio. Workflow results for this commit: `npm ci`, `npm test` (13 passed) and `npm run build` pass.
+- No wallet, signature, seed-phrase or holdings-gated features.
