@@ -76,3 +76,15 @@ Approved.
 - Tests: `src/share.test.ts` (round-trips of sample, default, every single cell and extreme settings; 17 malformed/truncated/out-of-range inputs fall back to defaults) and UI tests (URL updates, state restored from URL, malformed URL, copy confirmation, manual fallback). `npm test` (54 tests) and `npm run build` pass.
 
 Next: Milestone 5, six starter patterns (they can reuse `ShareState` and `decodeState` to stay valid).
+
+## Review of milestone 4
+
+Approved.
+
+- URL state: `src/share.ts` encodes steps (32 hex digits), tempo, swing (whole percent) and the 8 row volumes in the hash. `App.tsx` builds the link from the current state and keeps the address bar in step with `history.replaceState`, so the page does not reload and no history entries pile up. A `hashchange` listener also loads a link pasted into the same tab.
+- Exact restore: the initial state is decoded from `location.hash`. Every encoded value is an integer in the UI's domain (BPM is clamped to whole numbers, swing and volume sliders use step 1), so encoding loses nothing. A UI test restores a cell, tempo, swing and a muted row from the URL.
+- Copy link: `navigator.clipboard.writeText` followed by a "Link copied." status. If the clipboard is missing or the write fails (the error is caught), a read-only field shows the link to copy by hand. Both paths have tests.
+- Bad input: `decodeState` is wrapped in try/catch and checks the length and hex format of the steps, integer format and range for tempo, swing and volumes, and the volume count. Any failure returns the full defaults. 17 malformed, truncated or out-of-range cases are tested, plus a UI test with a malformed URL.
+- Round-trips: tests cover a sample state, the defaults, every single cell, the extreme tempo and swing values, an all-on grid, and `shareUrl` replacing an existing hash.
+- Workflow results for this commit: `npm ci`, `npm test` (54 passed) and `npm run build` pass.
+- No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
