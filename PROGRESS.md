@@ -118,3 +118,17 @@ Approved.
 - `npm test` (91 tests) and `npm run build` pass. Not checked: a real phone or browser (none available in this session); the 375 px layout was reasoned from the CSS, not seen.
 
 Next: all milestones in PLAN.md are done.
+
+## Review of milestone 6
+
+Approved.
+
+- Layout: header buttons, starters and controls use `flex-wrap`. Row labels are narrower (`w-20`) inside a sticky label column. Cells stay `h-10 w-10` (40×40 px) inside an `overflow-x-auto` grid, and buttons and inputs are at least 40 px tall. This was checked from the CSS only; no one has looked at it on a real 375 px screen, as the builder also notes.
+- Touch: `touch-action: manipulation` is set on html, buttons and inputs. Buttons have `user-select: none`, no touch callout and no tap highlight. The viewport keeps pinch zoom (no `user-scalable=no` or `maximum-scale`).
+- Keyboard: a window-level handler makes Space play and stop. It skips text-like inputs, textareas, selects, contenteditable and buttons other than cells, and it ignores key repeat. On a cell, the keyup default is blocked so the cell does not also toggle. Cells are buttons in the tab order, Enter toggles them, and arrow keys move between cells and stop at the edges. A single 3 px white `:focus-visible` outline applies to every control. Tests cover all of these.
+- Contrast: `src/a11y.test.ts` computes WCAG ratios for every text colour pair used in `App.tsx` (each at least 4.5:1). It also checks the on-cell, the off-cell borders (raised to neutral-500/400), the playhead and the focus ring (each at least 3:1), and it confirms that `App.tsx` still uses those classes.
+- No external requests: `src/dist.test.ts` runs a production build and scans every output file for absolute and protocol-relative URLs. The allowlist is narrow: W3C namespaces, React error-doc links and a Tailwind license name. The test also checks that `index.html` loads only `./assets/` and that our source never calls fetch, XHR, WebSocket, sendBeacon or EventSource. Adding `@types/node` for this test was recorded in DECISIONS.md.
+- README covers what the app does, the keyboard keys, and how to run, test, build and preview it.
+- Workflow results for this commit: `npm ci`, `npm test` (91 passed, including `a11y` and `dist`) and `npm run build` pass.
+- All milestones are done: milestones 1 to 5 each have an implementation commit and an approved review in this file, and milestone 6 is approved here, so all six milestones in PLAN.md are complete.
+- No wallet connection, signature or seed-phrase request, and no content gated on holdings. The README mentions the coin only as the way the project is funded; the app has no wallet code.
