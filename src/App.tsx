@@ -112,11 +112,56 @@ export default function App() {
     setPlaying(true)
   }
 
+  // Space plays and stops from anywhere except text fields, and except on
+  // buttons other than grid cells (there Space keeps its normal "press" meaning;
+  // on a cell, Enter toggles it instead).
+  const togglePlayRef = useRef(togglePlay)
+  togglePlayRef.current = togglePlay
+  useEffect(() => {
+    const isSpace = (e: KeyboardEvent) => e.key === ' ' || e.code === 'Space'
+    const takesSpace = (e: KeyboardEvent) => {
+      if (!isSpace(e) || e.ctrlKey || e.metaKey || e.altKey) return false
+      const t = e.target
+      if (!(t instanceof HTMLElement)) return true
+      if (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return false
+      if (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range') return false
+      if (t.closest('button, a[href]') && !t.closest('[data-step]')) return false
+      return true
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.defaultPrevented || !takesSpace(e)) return
+      e.preventDefault()
+      if (!e.repeat) void togglePlayRef.current()
+    }
+    // Some browsers press a focused button on Space key-up; keep cells from toggling.
+    function onKeyUp(e: KeyboardEvent) {
+      if (takesSpace(e)) e.preventDefault()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+    }
+  }, [])
+
+  // Arrow keys move between cells (Tab still reaches every cell).
+  function onGridKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const t = e.target as HTMLElement
+    if (t.dataset.row === undefined || t.dataset.step === undefined) return
+    const d = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] }[e.key]
+    if (!d) return
+    const r = Math.min(ROWS.length - 1, Math.max(0, Number(t.dataset.row) + d[0]))
+    const s = Math.min(STEPS - 1, Math.max(0, Number(t.dataset.step) + d[1]))
+    e.preventDefault()
+    e.currentTarget.querySelector<HTMLElement>(`[data-row="${r}"][data-step="${s}"]`)?.focus()
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-3 py-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold text-white">Loop Lab</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {!unlocked && (
             <button
               type="button"
@@ -231,12 +276,12 @@ export default function App() {
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-2" role="group" aria-label="Step grid">
+      <div className="mt-5 overflow-x-auto pb-2" role="group" aria-label="Step grid" onKeyDown={onGridKeyDown}>
         <div className="inline-flex min-w-max flex-col gap-1.5">
           {ROWS.map((name, r) => (
             <div key={name} className="flex items-center gap-2">
               <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950 pr-1">
-                <span className="w-24 shrink-0 text-sm font-medium text-neutral-200">{name}</span>
+                <span className="w-20 shrink-0 text-sm font-medium text-neutral-200">{name}</span>
                 <input
                   type="range"
                   aria-label={`${name} volume`}
@@ -260,14 +305,16 @@ export default function App() {
                           type="button"
                           aria-pressed={on}
                           aria-label={`${name} step ${s + 1}, ${on ? 'on' : 'off'}`}
+                          data-row={r}
+                          data-step={s}
                           data-playhead={step === s ? 'true' : undefined}
                           onClick={() => setPattern((p) => toggleCell(p, r, s))}
-                          className={`h-10 w-10 shrink-0 rounded-md border-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                          className={`h-10 w-10 shrink-0 rounded-md border-2 ${
                             on
                               ? 'border-lime-200 bg-lime-400'
                               : g % 2 === 0
-                                ? 'border-neutral-600 bg-neutral-800'
-                                : 'border-neutral-600 bg-neutral-700'
+                                ? 'border-neutral-500 bg-neutral-800'
+                                : 'border-neutral-400 bg-neutral-700'
                           } ${step === s ? 'ring-4 ring-white' : ''}`}
                         />
                       )

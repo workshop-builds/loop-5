@@ -51,3 +51,18 @@ Why: the hash never reaches a server and needs no routing on a static site; the 
 
 Decision: each starter is eight 16-character strings (`x` hit, `.` rest) in `src/starters.ts`, with its own tempo and swing. The picker is a row of six buttons. Loading a starter replaces pattern, tempo, swing and resets row volumes to the default.
 Why: text rows are easy to read and review as music; buttons are one tap on a phone and need no extra control; a starter is a whole sound, so leftover volumes or swing from the previous pattern would make it sound wrong.
+
+## 2026-10-14: Space is a global play key, with exceptions; arrows move between cells
+
+Decision: a window-level key handler makes Space play/stop, except in text-like fields, selects, and on buttons other than grid cells (where Space keeps its normal "press" meaning). On a cell, Space plays/stops and Enter toggles it. Arrow keys move focus between cells; Tab still reaches every cell. One white 3 px focus outline is defined once in `index.css`.
+Why: the plan asks for Space = play/stop whenever focus is not in a text field, but hijacking Space on Play or Clear would break them for keyboard users, and a focused cell would otherwise toggle and play at once. Arrow keys make a 128-cell grid usable without 128 tab stops.
+
+## 2026-10-14: Touch handling and contrast are fixed in CSS and checked by tests
+
+Decision: `touch-action: manipulation` on html, buttons and inputs (no double-tap zoom, pinch zoom kept for accessibility), `user-select: none` on buttons. Off-cell borders were raised (neutral-500/400) so they reach 3:1 on the page; text pairs and the lime on-cell are tested for AA with a contrast function over the Tailwind palette values.
+Why: the viewport is not locked (`user-scalable=no` would fail accessibility); the contrast test fails if someone changes the palette without rechecking.
+
+## 2026-10-14: The no-external-requests check builds the app and scans the output
+
+Decision: `src/dist.test.ts` runs a production Vite build into `node_modules/.tmp` and scans every file for absolute or protocol-relative URLs, allowing only XML namespace identifiers, React's error-doc strings and a license comment, and checks that `index.html` references only `./assets/`. The fetch/XHR/WebSocket ban is checked on our own source, since React's bundle names those APIs.
+Why: scanning the real build output catches anything a dependency adds; the allowlist covers strings that are never requested. The build runs in the test so `npm test` does not depend on a previous `npm run build`.

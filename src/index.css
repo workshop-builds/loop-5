@@ -5,3 +5,24 @@
   background: #0a0a0a;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Taps never wait for or trigger double-tap zoom (pinch zoom still works). */
+html,
+button,
+input {
+  touch-action: manipulation;
+}
+
+/* Tapping controls never selects text or flashes the mobile tap highlight. */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* One clear focus ring for every control (white on the dark page: 19:1). */
+:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}

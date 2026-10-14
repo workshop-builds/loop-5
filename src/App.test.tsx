@@ -160,3 +160,56 @@ describe('starter patterns', () => {
       expect(screen.getByRole('button', { name: n })).toBeTruthy()
   })
 })
+
+describe('keyboard', () => {
+  const space = () => new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })
+
+  it('Space toggles play from the page (no audio in jsdom, so it reports that)', async () => {
+    render(<App />)
+    const ev = space()
+    document.body.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(true)
+    expect(await screen.findByRole('alert')).toBeTruthy()
+  })
+
+  it('Space does nothing in text fields', () => {
+    render(<App />)
+    const ev = space()
+    screen.getByLabelText('Tempo (BPM)').dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(false)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('Space on a plain button keeps its normal meaning', () => {
+    render(<App />)
+    const ev = space()
+    screen.getByRole('button', { name: 'Clear' }).dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(false)
+  })
+
+  it('cells are focusable buttons that toggle', () => {
+    render(<App />)
+    const cell = screen.getByRole('button', { name: 'Kick step 1, off' }) as HTMLButtonElement
+    expect(cell.tabIndex).toBe(0)
+    cell.focus()
+    expect(document.activeElement).toBe(cell)
+    fireEvent.click(cell) // Enter on a focused button fires click
+    expect(screen.getByRole('button', { name: 'Kick step 1, on' })).toBeTruthy()
+  })
+
+  it('arrow keys move focus between cells and stop at the edges', () => {
+    render(<App />)
+    const start = screen.getByRole('button', { name: 'Kick step 1, off' })
+    start.focus()
+    fireEvent.keyDown(start, { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Kick step 2, off' }))
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Snare step 2, off' }))
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' })
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Snare step 1, off' }))
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' })
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Kick step 1, off' }))
+  })
+})

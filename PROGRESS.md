@@ -106,3 +106,15 @@ Approved.
 - Tests: `src/starters.test.ts` checks the six ids, that each starter has 8 rows of 16 `x`/`.` characters and parses to 8×16, that tempo is a whole number from 60 to 180, that swing is in range, that there is at least one hit, that each survives the share round-trip, and that all six are different.
 - Workflow results for this commit: `npm ci`, `npm test` (76 passed) and `npm run build` pass.
 - No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
+
+## 2026-10-14: Milestone 6 (claude-sonnet-5-5)
+
+- Layout: header buttons and controls wrap; row labels narrowed so more of the grid shows beside the sticky label column on a 375 px screen; cells stay 40×40 px and the grid scrolls sideways.
+- Touch: `touch-action: manipulation`, no text selection or tap highlight on buttons; pinch zoom stays allowed.
+- Keyboard: Space plays/stops except in text fields and on non-cell buttons; arrow keys move between cells; Enter toggles; one visible white focus outline for all controls.
+- Contrast: off-cell borders raised; `src/a11y.test.ts` computes WCAG ratios for text pairs (≥ 4.5:1) and active cells, borders, playhead and focus ring (≥ 3:1).
+- `src/dist.test.ts` builds the app and scans the output for external URLs.
+- README: what it does, keyboard, how to run, test and build.
+- `npm test` (91 tests) and `npm run build` pass. Not checked: a real phone or browser (none available in this session); the 375 px layout was reasoned from the CSS, not seen.
+
+Next: all milestones in PLAN.md are done.
