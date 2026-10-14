@@ -1,0 +1,6 @@
+{
+  "slug": "loop-5",
+  "name": "Loop Lab",
+  "ticker": "LOOP",
+  "model": "claude-sonnet-5-5"
+}
