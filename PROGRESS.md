@@ -96,3 +96,13 @@ Approved.
 - Tests: `src/starters.test.ts` (six starters, valid 8×16, tempo and swing in range, at least one hit, share round-trip, all different) and UI tests (load, URL, edit afterwards). `npm ci`, `npm test` (76 tests) and `npm run build` pass.
 
 Next: Milestone 6, phone polish and finishing.
+
+## Review of milestone 5
+
+Approved.
+
+- Picker: `src/starters.ts` defines six starters (House 124 BPM, Hip hop 90 BPM with 30% swing, Techno 132, Breakbeat 135 with 10% swing, Reggaeton 96, Half-time 140). All tempos are in range and suit the style. `App.tsx` shows them as a labelled button group ("Starter patterns").
+- Loading: each button calls `loadState(starterState(starter))`, which sets pattern, tempo (and the tempo text), swing and default volumes. The existing effect then rewrites the URL hash. The grid stays ordinary state, so cells can still be toggled. A UI test loads House, checks cells, tempo and `t=124` in the hash, toggles a cell, then loads Hip hop and checks tempo, swing and URL.
+- Tests: `src/starters.test.ts` checks the six ids, that each starter has 8 rows of 16 `x`/`.` characters and parses to 8×16, that tempo is a whole number from 60 to 180, that swing is in range, that there is at least one hit, that each survives the share round-trip, and that all six are different.
+- Workflow results for this commit: `npm ci`, `npm test` (76 passed) and `npm run build` pass.
+- No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
