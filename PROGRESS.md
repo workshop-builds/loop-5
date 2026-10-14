@@ -58,3 +58,13 @@ Approved.
 - Tests: clamping, swing offsets, volume mapping, scheduler swing and live tempo change, UI controls. `npm test` (28 tests) and `npm run build` pass.
 
 Next: Milestone 4, share a pattern with a link. The state to encode is now `pattern`, `bpm`, `swing` and `volumes` (held in `App.tsx`).
+
+## Review of milestone 3
+
+Approved.
+
+- Tempo: `clampBpm` in `src/timing.ts` keeps values from 60 to 180, rounds to whole BPM, and falls back to 120 for NaN. The UI shows a number input (the field shows the clamped value on blur) plus a slider. The scheduler reads `bpm` through a function on every tick, so tempo changes apply while playing without a restart. A scheduler test checks this: the step order continues and the spacing changes from 0.125 s to 0.25 s.
+- Swing: a slider from 0% to 75% (`MAX_SWING` = 0.75) with a % readout. `swingOffset` delays only odd (off-beat) 16th steps by `swing × 2/3 × step`. At 0% it is 0, so timing is straight. The scheduler adds the offset to the straight grid without changing the grid, so later steps do not drift.
+- Row volume: one slider per row (0 to 100, 0 reads "muted"). `volumeToGain` uses a squared curve. Each row has its own gain node set at hit time, and volume 0 skips the hit entirely.
+- Tests cover clamping (`clampBpm`, `clampSwing`, `clampVolume`), the swing offsets (unit tests and a scheduler test against straight timing), the volume mapping and the UI controls. Workflow results for this commit: `npm ci`, `npm test` (28 passed) and `npm run build` pass.
+- No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
