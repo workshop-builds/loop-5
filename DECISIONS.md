@@ -46,3 +46,8 @@ Why: changes take effect without stopping, and the next-step timing stays contin
 
 Decision: the state is encoded in the hash as `p` (steps, one hex digit per 4 steps, 8 rows × 4 digits), `t` (BPM), `s` (swing in whole percent), `v` (8 volumes joined by dots). If any part is missing or invalid, the whole link falls back to the defaults rather than a partial restore. The address bar is updated with `replaceState`.
 Why: the hash never reaches a server and needs no routing on a static site; the link stays short (about 70 characters); an all-or-nothing fallback keeps a damaged link from producing a half-wrong pattern. `replaceState` avoids a history entry for every cell click.
+
+## 2026-10-14: Starters are text rows, buttons not a select, volumes reset
+
+Decision: each starter is eight 16-character strings (`x` hit, `.` rest) in `src/starters.ts`, with its own tempo and swing. The picker is a row of six buttons. Loading a starter replaces pattern, tempo, swing and resets row volumes to the default.
+Why: text rows are easy to read and review as music; buttons are one tap on a phone and need no extra control; a starter is a whole sound, so leftover volumes or swing from the previous pattern would make it sound wrong.

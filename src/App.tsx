@@ -3,7 +3,8 @@ import { Engine } from './engine'
 import { MAX_VOLUME, MIN_VOLUME, clampVolume } from './mix'
 import { MAX_BPM, MAX_SWING, MIN_BPM, clampBpm, clampSwing } from './timing'
 import { ROWS, STEPS, createPattern, toggleCell } from './pattern'
-import { decodeState, shareUrl } from './share'
+import { decodeState, shareUrl, type ShareState } from './share'
+import { STARTERS, starterState } from './starters'
 
 export default function App() {
   const [initial] = useState(() => decodeState(window.location.hash))
@@ -59,16 +60,19 @@ export default function App() {
   useEffect(() => {
     function onHashChange() {
       if (window.location.href === link) return
-      const next = decodeState(window.location.hash)
-      setPattern(next.pattern)
-      setBpm(next.bpm)
-      setBpmText(String(next.bpm))
-      setSwing(next.swing)
-      setVolumes(next.volumes)
+      loadState(decodeState(window.location.hash))
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [link])
+
+  function loadState(next: ShareState) {
+    setPattern(next.pattern)
+    setBpm(next.bpm)
+    setBpmText(String(next.bpm))
+    setSwing(next.swing)
+    setVolumes(next.volumes)
+  }
 
   async function copyLink() {
     try {
@@ -168,6 +172,20 @@ export default function App() {
           {error}
         </p>
       )}
+
+      <div role="group" aria-label="Starter patterns" className="mt-4 flex flex-wrap items-center gap-2 text-sm text-neutral-100">
+        <span>Starters</span>
+        {STARTERS.map((starter) => (
+          <button
+            key={starter.id}
+            type="button"
+            onClick={() => loadState(starterState(starter))}
+            className="min-h-10 rounded-md border border-neutral-500 px-3 font-semibold text-white hover:bg-neutral-800"
+          >
+            {starter.name}
+          </button>
+        ))}
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-100">
         <div className="flex items-center gap-2">

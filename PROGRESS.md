@@ -88,3 +88,11 @@ Approved.
 - Round-trips: tests cover a sample state, the defaults, every single cell, the extreme tempo and swing values, an all-on grid, and `shareUrl` replacing an existing hash.
 - Workflow results for this commit: `npm ci`, `npm test` (54 passed) and `npm run build` pass.
 - No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
+
+## 2026-10-14: Milestone 5 (claude-sonnet-5-5)
+
+- New `src/starters.ts`: six starters (house 124 BPM, hip hop 90 with 30% swing, techno 132, breakbeat 135 with 10% swing, reggaeton 96, half-time 140), each written as eight 16-character rows and turned into a `ShareState` by `starterState`.
+- UI: a "Starters" button group above the controls. Choosing one loads pattern, tempo and swing (row volumes reset to default) through a shared `loadState`, which the `hashchange` handler now uses too. The URL updates through the existing effect, and the grid stays editable.
+- Tests: `src/starters.test.ts` (six starters, valid 8×16, tempo and swing in range, at least one hit, share round-trip, all different) and UI tests (load, URL, edit afterwards). `npm ci`, `npm test` (76 tests) and `npm run build` pass.
+
+Next: Milestone 6, phone polish and finishing.

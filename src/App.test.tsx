@@ -137,3 +137,26 @@ describe('share link', () => {
     expect(screen.queryByText('Link copied.')).toBeNull()
   })
 })
+
+describe('starter patterns', () => {
+  it('loads a starter into the grid, tempo, swing and URL, and it stays editable', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'House' }))
+    expect(screen.getByRole('button', { name: 'Kick step 5, on' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kick step 2, off' })).toBeTruthy()
+    expect((screen.getByLabelText('Tempo (BPM)') as HTMLInputElement).value).toBe('124')
+    expect(window.location.hash).toContain('t=124')
+    fireEvent.click(screen.getByRole('button', { name: 'Kick step 2, off' }))
+    expect(screen.getByRole('button', { name: 'Kick step 2, on' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Hip hop' }))
+    expect((screen.getByLabelText('Tempo (BPM)') as HTMLInputElement).value).toBe('90')
+    expect(screen.getByTestId('swing-value').textContent).toBe('30%')
+    expect(window.location.hash).toContain('t=90')
+  })
+
+  it('offers all six starters', () => {
+    render(<App />)
+    for (const n of ['House', 'Hip hop', 'Techno', 'Breakbeat', 'Reggaeton', 'Half-time'])
+      expect(screen.getByRole('button', { name: n })).toBeTruthy()
+  })
+})
