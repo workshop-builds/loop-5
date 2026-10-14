@@ -66,3 +66,8 @@ Why: the viewport is not locked (`user-scalable=no` would fail accessibility); t
 
 Decision: `src/dist.test.ts` runs a production Vite build into `node_modules/.tmp` and scans every file for absolute or protocol-relative URLs, allowing only XML namespace identifiers, React's error-doc strings and a license comment, and checks that `index.html` references only `./assets/`. The fetch/XHR/WebSocket ban is checked on our own source, since React's bundle names those APIs.
 Why: scanning the real build output catches anything a dependency adds; the allowlist covers strings that are never requested. The build runs in the test so `npm test` does not depend on a previous `npm run build`.
+
+## 2026-10-14: Node types for the two file-scanning tests
+
+Decision: added `@types/node` as a dev dependency and `"node"` to `types` in tsconfig.
+Why: `dist.test.ts` and `a11y.test.ts` read files and run a Vite build, and `tsc -b` type-checks tests too. Without it `npm run build` failed.
