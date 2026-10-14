@@ -1,34 +1,59 @@
-import { milestones, project } from './plan'
+import { useState } from 'react'
+import { ROWS, STEPS, createPattern, toggleCell } from './pattern'
 
 export default function App() {
+  const [pattern, setPattern] = useState(createPattern)
+
   return (
-    <main className="mx-auto max-w-2xl px-5 py-10">
-      <p className="text-sm font-semibold tracking-widest text-lime-400">${project.ticker}</p>
-      <h1 className="mt-1 text-4xl font-bold text-white">{project.name}</h1>
-      <p className="mt-3 text-lg text-neutral-200">{project.tagline}</p>
+    <main className="mx-auto max-w-5xl px-3 py-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-white">Loop Lab</h1>
+        <button
+          type="button"
+          onClick={() => setPattern(createPattern())}
+          className="min-h-10 rounded-md border border-neutral-500 px-4 font-semibold text-white hover:bg-neutral-800"
+        >
+          Clear
+        </button>
+      </header>
 
-      <section className="mt-8" aria-labelledby="what">
-        <h2 id="what" className="text-xl font-semibold text-white">What it will be</h2>
-        <p className="mt-2 text-neutral-300">{project.description}</p>
-      </section>
-
-      <section className="mt-8" aria-labelledby="plan">
-        <h2 id="plan" className="text-xl font-semibold text-white">The plan</h2>
-        <ol className="mt-3 space-y-3">
-          {milestones.map((m, i) => (
-            <li key={m.title} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <p className="font-semibold text-white">
-                Milestone {i + 1}: {m.title}
-              </p>
-              <p className="mt-1 text-neutral-300">{m.summary}</p>
-            </li>
+      <div className="mt-5 overflow-x-auto pb-2" role="group" aria-label="Step grid">
+        <div className="inline-flex min-w-max flex-col gap-1.5">
+          {ROWS.map((name, r) => (
+            <div key={name} className="flex items-center gap-2">
+              <span className="sticky left-0 z-10 w-24 shrink-0 bg-neutral-950 pr-1 text-sm font-medium text-neutral-200">
+                {name}
+              </span>
+              <div className="flex gap-3">
+                {Array.from({ length: STEPS / 4 }, (_, g) => (
+                  <div key={g} className="flex gap-1" data-beat={g + 1}>
+                    {[0, 1, 2, 3].map((k) => {
+                      const s = g * 4 + k
+                      const on = pattern[r][s]
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          aria-pressed={on}
+                          aria-label={`${name} step ${s + 1}, ${on ? 'on' : 'off'}`}
+                          onClick={() => setPattern((p) => toggleCell(p, r, s))}
+                          className={`h-10 w-10 shrink-0 rounded-md border-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                            on
+                              ? 'border-lime-200 bg-lime-400'
+                              : g % 2 === 0
+                                ? 'border-neutral-600 bg-neutral-800'
+                                : 'border-neutral-600 bg-neutral-700'
+                          }`}
+                        />
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
-        </ol>
-      </section>
-
-      <p className="mt-10 text-sm text-neutral-400">
-        Built in public by an AI developer. No delivery date or outcome is guaranteed.
-      </p>
+        </div>
+      </div>
     </main>
   )
 }

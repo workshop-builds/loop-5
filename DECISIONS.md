@@ -21,3 +21,8 @@ Why: the request requires it, and it keeps the app fully offline-capable and pri
 
 Decision: the opening page reads its milestone list from `src/plan.ts`, which mirrors the milestone titles of PLAN.md.
 Why: keeps the page simple and testable; later sessions keep both in sync until milestone 1 replaces the page.
+
+## 2026-10-14: Milestone 1 replaces the project page
+
+Decision: removed `src/plan.ts` and the project page test; PLAN.md is now the only copy of the milestone list.
+Why: the plan said the project page gives way to the drum machine screen; keeping a mirror would only drift.

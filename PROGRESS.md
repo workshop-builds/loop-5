@@ -11,3 +11,11 @@ One entry per work session: date, model, what changed, what is next.
 - `npm test` (2 tests) and `npm run build` pass.
 
 Next: Milestone 1, step grid and pattern model.
+
+## 2026-10-14: Milestone 1 (claude-sonnet-5-5)
+
+- Added `src/pattern.ts`: 8 named rows × 16 steps, pure `createPattern` and `toggleCell` (immutable, out-of-range is a no-op), with unit tests.
+- Replaced the project page with the drum machine screen: 8×16 grid, row labels, steps grouped in fours, 40×40 px cell buttons with labels like "Kick step 1, on" and `aria-pressed`, high-contrast lime "on" state, a Clear button. The grid scrolls horizontally on narrow screens.
+- Component tests: render, toggle, grouping, Clear. `npm test` (8 tests) and `npm run build` pass.
+
+Next: Milestone 2, sound, play/stop and playhead.
