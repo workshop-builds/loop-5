@@ -1,8 +1,12 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import App from './App'
 
-afterEach(cleanup)
+beforeEach(() => window.history.replaceState(null, '', '/'))
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 describe('step grid', () => {
   it('renders 8 rows x 16 steps with labels', () => {
@@ -78,5 +82,58 @@ describe('step grid', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Snare step 5, off' }))
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
     expect(screen.queryAllByRole('button', { name: /, on$/ })).toHaveLength(0)
+  })
+})
+
+describe('share link', () => {
+  it('updates the URL as the pattern changes, without reloading', () => {
+    render(<App />)
+    const before = window.location.hash
+    fireEvent.click(screen.getByRole('button', { name: 'Kick step 1, off' }))
+    expect(window.location.hash).not.toBe(before)
+    fireEvent.change(screen.getByLabelText('Swing'), { target: { value: '50' } })
+    expect(window.location.hash).toContain('s=50')
+  })
+
+  it('restores the exact state from the URL', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Snare step 5, off' }))
+    fireEvent.change(screen.getByLabelText('Tempo slider'), { target: { value: '99' } })
+    fireEvent.change(screen.getByLabelText('Swing'), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText('Kick volume'), { target: { value: '0' } })
+    const url = window.location.href
+    cleanup()
+    window.history.replaceState(null, '', '/')
+    window.history.replaceState(null, '', url)
+    render(<App />)
+    expect(screen.getByRole('button', { name: 'Snare step 5, on' })).toBeTruthy()
+    expect((screen.getByLabelText('Tempo (BPM)') as HTMLInputElement).value).toBe('99')
+    expect(screen.getByTestId('swing-value').textContent).toBe('30%')
+    expect(screen.getByLabelText('Kick volume').getAttribute('aria-valuetext')).toBe('muted')
+  })
+
+  it('falls back to defaults on a malformed URL', () => {
+    window.history.replaceState(null, '', '/#p=zzzz&t=9999')
+    render(<App />)
+    expect(screen.queryAllByRole('button', { name: /, on$/ })).toHaveLength(0)
+    expect((screen.getByLabelText('Tempo (BPM)') as HTMLInputElement).value).toBe('120')
+  })
+
+  it('copies the link and confirms', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy link' }))
+    expect(await screen.findByText('Link copied.')).toBeTruthy()
+    expect(writeText).toHaveBeenCalledWith(window.location.href)
+  })
+
+  it('shows the link for manual copying when the clipboard is unavailable', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: undefined })
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy link' }))
+    const field = (await screen.findByLabelText('Copy this link yourself:')) as HTMLInputElement
+    expect(field.value).toBe(window.location.href)
+    expect(screen.queryByText('Link copied.')).toBeNull()
   })
 })

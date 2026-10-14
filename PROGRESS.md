@@ -68,3 +68,11 @@ Approved.
 - Row volume: one slider per row (0 to 100, 0 reads "muted"). `volumeToGain` uses a squared curve. Each row has its own gain node set at hit time, and volume 0 skips the hit entirely.
 - Tests cover clamping (`clampBpm`, `clampSwing`, `clampVolume`), the swing offsets (unit tests and a scheduler test against straight timing), the volume mapping and the UI controls. Workflow results for this commit: `npm ci`, `npm test` (28 passed) and `npm run build` pass.
 - No wallet, signature, seed-phrase or holdings-gated features, and no network requests or external URLs in `src/`.
+
+## 2026-10-14: Milestone 4 (claude-sonnet-5-5)
+
+- New `src/share.ts`: `encodeState` / `decodeState` / `shareUrl` / `defaultState`. The full state (steps, tempo, swing, row volumes) lives in the URL hash, e.g. `#p=<32 hex>&t=120&s=0&v=80.80...`. `decodeState` never throws: anything missing, malformed, truncated or out of range gives the defaults.
+- `App.tsx`: initial state is read from the hash; the address bar is kept in step with `history.replaceState` (no reload, no history spam); a `hashchange` listener loads a link pasted into the same tab. "Copy link" button copies the URL and shows "Link copied."; if the clipboard API is missing or fails, the link is shown in a read-only field to copy by hand.
+- Tests: `src/share.test.ts` (round-trips of sample, default, every single cell and extreme settings; 17 malformed/truncated/out-of-range inputs fall back to defaults) and UI tests (URL updates, state restored from URL, malformed URL, copy confirmation, manual fallback). `npm test` (54 tests) and `npm run build` pass.
+
+Next: Milestone 5, six starter patterns (they can reuse `ShareState` and `decodeState` to stay valid).

@@ -41,3 +41,8 @@ Why: it keeps 0% exactly straight, keeps the maximum musical (a delay of half a 
 
 Decision: the scheduler and engine read tempo, swing and volumes through functions on every tick (via a ref in `App.tsx`), not at start. Row volume is a per-row gain node set at each hit, using a squared curve; volume 0 skips the hit.
 Why: changes take effect without stopping, and the next-step timing stays continuous because only the step length for the following step changes.
+
+## 2026-10-14: Share state lives in the URL hash, all or nothing
+
+Decision: the state is encoded in the hash as `p` (steps, one hex digit per 4 steps, 8 rows × 4 digits), `t` (BPM), `s` (swing in whole percent), `v` (8 volumes joined by dots). If any part is missing or invalid, the whole link falls back to the defaults rather than a partial restore. The address bar is updated with `replaceState`.
+Why: the hash never reaches a server and needs no routing on a static site; the link stays short (about 70 characters); an all-or-nothing fallback keeps a damaged link from producing a half-wrong pattern. `replaceState` avoids a history entry for every cell click.

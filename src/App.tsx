@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { Engine } from './engine'
-import { DEFAULT_VOLUME, MAX_VOLUME, MIN_VOLUME, clampVolume } from './mix'
-import { DEFAULT_BPM, DEFAULT_SWING, MAX_BPM, MAX_SWING, MIN_BPM, clampBpm, clampSwing } from './timing'
+import { MAX_VOLUME, MIN_VOLUME, clampVolume } from './mix'
+import { MAX_BPM, MAX_SWING, MIN_BPM, clampBpm, clampSwing } from './timing'
 import { ROWS, STEPS, createPattern, toggleCell } from './pattern'
+import { decodeState, shareUrl } from './share'
 
 export default function App() {
-  const [pattern, setPattern] = useState(createPattern)
+  const [initial] = useState(() => decodeState(window.location.hash))
+  const [pattern, setPattern] = useState(initial.pattern)
   const [unlocked, setUnlocked] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [step, setStep] = useState(-1)
   const [error, setError] = useState('')
-  const [bpm, setBpm] = useState(DEFAULT_BPM)
-  const [bpmText, setBpmText] = useState(String(DEFAULT_BPM))
-  const [swing, setSwing] = useState(DEFAULT_SWING)
-  const [volumes, setVolumes] = useState<number[]>(() => ROWS.map(() => DEFAULT_VOLUME))
+  const [bpm, setBpm] = useState(initial.bpm)
+  const [bpmText, setBpmText] = useState(String(initial.bpm))
+  const [swing, setSwing] = useState(initial.swing)
+  const [volumes, setVolumes] = useState<number[]>(initial.volumes)
   const settingsRef = useRef({ bpm, swing, volumes })
   settingsRef.current = { bpm, swing, volumes }
   const patternRef = useRef(pattern)
@@ -37,6 +39,47 @@ export default function App() {
   }, [playing, engine])
 
   useEffect(() => () => engine.stop(), [engine])
+
+  const [copied, setCopied] = useState(false)
+  const [manualLink, setManualLink] = useState('')
+  const link = shareUrl({ pattern, bpm, swing, volumes }, window.location.href)
+
+  // Keep the address bar in step with the state, without reloading or adding history entries.
+  useEffect(() => {
+    try {
+      if (window.location.href !== link) window.history.replaceState(null, '', link)
+    } catch {
+      // Some sandboxes forbid changing the URL; sharing still works through the button.
+    }
+    setCopied(false)
+    setManualLink('')
+  }, [link])
+
+  // Someone pasted a different share link into this tab (hash-only navigation does not reload).
+  useEffect(() => {
+    function onHashChange() {
+      if (window.location.href === link) return
+      const next = decodeState(window.location.hash)
+      setPattern(next.pattern)
+      setBpm(next.bpm)
+      setBpmText(String(next.bpm))
+      setSwing(next.swing)
+      setVolumes(next.volumes)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [link])
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setManualLink('')
+    } catch {
+      setCopied(false)
+      setManualLink(link)
+    }
+  }
 
   function changeBpm(text: string) {
     setBpmText(text)
@@ -93,9 +136,33 @@ export default function App() {
           >
             Clear
           </button>
+          <button
+            type="button"
+            onClick={copyLink}
+            className="min-h-10 rounded-md border border-neutral-500 px-4 font-semibold text-white hover:bg-neutral-800"
+          >
+            Copy link
+          </button>
         </div>
       </header>
       {!unlocked && <p className="mt-2 text-sm text-neutral-200">Tap to start to turn the sound on.</p>}
+      {copied && (
+        <p role="status" className="mt-2 text-sm text-lime-300">
+          Link copied.
+        </p>
+      )}
+      {manualLink && (
+        <div className="mt-2 text-sm text-neutral-100">
+          <label htmlFor="manual-link">Copy this link yourself:</label>
+          <input
+            id="manual-link"
+            readOnly
+            value={manualLink}
+            onFocus={(e) => e.currentTarget.select()}
+            className="mt-1 h-10 w-full rounded-md border border-neutral-500 bg-neutral-900 px-2 text-white"
+          />
+        </div>
+      )}
       {error && (
         <p role="alert" className="mt-2 text-sm text-red-300">
           {error}
