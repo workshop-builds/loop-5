@@ -31,3 +31,13 @@ Why: the plan said the project page gives way to the drum machine screen; keepin
 
 Decision: the scheduler takes an injected clock and an `onStep(step, time)` callback; only `engine.ts` touches AudioContext. The playhead follows a queue of scheduled step times against `ctx.currentTime`.
 Why: the step sequence can be unit tested with a mocked clock, and the highlight matches what is heard rather than what is scheduled ahead.
+
+## 2026-10-14: Swing is a fraction, delaying odd 16th steps
+
+Decision: swing is stored as 0 to 0.75 and shown as 0% to 75%. An off-beat step (odd index) is delayed by `swing × 2/3 × step length`, so 50% is a triplet shuffle and 75% is half a step late. On-beat steps never move.
+Why: it keeps 0% exactly straight, keeps the maximum musical (a delay of half a step would put the off-beat on the next step), and a fraction is easy to encode in the URL later.
+
+## 2026-10-14: Live settings are read at schedule time
+
+Decision: the scheduler and engine read tempo, swing and volumes through functions on every tick (via a ref in `App.tsx`), not at start. Row volume is a per-row gain node set at each hit, using a squared curve; volume 0 skips the hit.
+Why: changes take effect without stopping, and the next-step timing stays continuous because only the step length for the following step changes.

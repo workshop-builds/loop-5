@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Engine } from './engine'
+import { DEFAULT_VOLUME, MAX_VOLUME, MIN_VOLUME, clampVolume } from './mix'
+import { DEFAULT_BPM, DEFAULT_SWING, MAX_BPM, MAX_SWING, MIN_BPM, clampBpm, clampSwing } from './timing'
 import { ROWS, STEPS, createPattern, toggleCell } from './pattern'
 
 export default function App() {
@@ -8,10 +10,16 @@ export default function App() {
   const [playing, setPlaying] = useState(false)
   const [step, setStep] = useState(-1)
   const [error, setError] = useState('')
+  const [bpm, setBpm] = useState(DEFAULT_BPM)
+  const [bpmText, setBpmText] = useState(String(DEFAULT_BPM))
+  const [swing, setSwing] = useState(DEFAULT_SWING)
+  const [volumes, setVolumes] = useState<number[]>(() => ROWS.map(() => DEFAULT_VOLUME))
+  const settingsRef = useRef({ bpm, swing, volumes })
+  settingsRef.current = { bpm, swing, volumes }
   const patternRef = useRef(pattern)
   patternRef.current = pattern
   const engineRef = useRef<Engine | null>(null)
-  if (!engineRef.current) engineRef.current = new Engine(() => patternRef.current)
+  if (!engineRef.current) engineRef.current = new Engine(() => patternRef.current, () => settingsRef.current)
   const engine = engineRef.current
 
   useEffect(() => {
@@ -29,6 +37,15 @@ export default function App() {
   }, [playing, engine])
 
   useEffect(() => () => engine.stop(), [engine])
+
+  function changeBpm(text: string) {
+    setBpmText(text)
+    if (text.trim() !== '' && !Number.isNaN(Number(text))) setBpm(clampBpm(Number(text)))
+  }
+
+  function setVolume(row: number, value: number) {
+    setVolumes((v) => v.map((x, i) => (i === row ? clampVolume(value) : x)))
+  }
 
   async function unlock() {
     const ok = await engine.unlock()
@@ -85,13 +102,67 @@ export default function App() {
         </p>
       )}
 
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-100">
+        <div className="flex items-center gap-2">
+          <label htmlFor="tempo">Tempo (BPM)</label>
+          <input
+            id="tempo"
+            type="number"
+            inputMode="numeric"
+            min={MIN_BPM}
+            max={MAX_BPM}
+            value={bpmText}
+            onChange={(e) => changeBpm(e.target.value)}
+            onBlur={() => setBpmText(String(bpm))}
+            className="h-10 w-20 rounded-md border border-neutral-500 bg-neutral-900 px-2 text-white"
+          />
+          <input
+            type="range"
+            aria-label="Tempo slider"
+            min={MIN_BPM}
+            max={MAX_BPM}
+            value={bpm}
+            onChange={(e) => {
+              changeBpm(e.target.value)
+            }}
+            className="h-10 w-32 accent-lime-400"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="swing">Swing</label>
+          <input
+            id="swing"
+            type="range"
+            min={0}
+            max={MAX_SWING * 100}
+            step={1}
+            value={Math.round(swing * 100)}
+            onChange={(e) => setSwing(clampSwing(Number(e.target.value) / 100))}
+            className="h-10 w-32 accent-lime-400"
+          />
+          <output htmlFor="swing" data-testid="swing-value" className="w-12 tabular-nums">
+            {Math.round(swing * 100)}%
+          </output>
+        </div>
+      </div>
+
       <div className="mt-5 overflow-x-auto pb-2" role="group" aria-label="Step grid">
         <div className="inline-flex min-w-max flex-col gap-1.5">
           {ROWS.map((name, r) => (
             <div key={name} className="flex items-center gap-2">
-              <span className="sticky left-0 z-10 w-24 shrink-0 bg-neutral-950 pr-1 text-sm font-medium text-neutral-200">
-                {name}
-              </span>
+              <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950 pr-1">
+                <span className="w-24 shrink-0 text-sm font-medium text-neutral-200">{name}</span>
+                <input
+                  type="range"
+                  aria-label={`${name} volume`}
+                  aria-valuetext={volumes[r] === 0 ? 'muted' : `${volumes[r]}%`}
+                  min={MIN_VOLUME}
+                  max={MAX_VOLUME}
+                  value={volumes[r]}
+                  onChange={(e) => setVolume(r, Number(e.target.value))}
+                  className="h-10 w-20 shrink-0 accent-lime-400"
+                />
+              </div>
               <div className="flex gap-3">
                 {Array.from({ length: STEPS / 4 }, (_, g) => (
                   <div key={g} className="flex gap-1" data-beat={g + 1}>

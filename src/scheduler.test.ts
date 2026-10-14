@@ -30,6 +30,50 @@ describe('Scheduler', () => {
     for (let i = 1; i < seen.length; i++) expect(seen[i][1] - seen[i - 1][1]).toBeCloseTo(0.125)
   })
 
+  it('delays only off-beat steps when swing is set, and 0% is straight', () => {
+    const run = (swing: number) => {
+      let clock = 0
+      const seen: [number, number][] = []
+      const s = new Scheduler({ now: () => clock, bpm: 120, swing, onStep: (st, t) => seen.push([st, t]) })
+      s.start()
+      for (let i = 0; i < 30; i++) {
+        clock += 0.05
+        s.tick()
+      }
+      s.stop()
+      return seen.slice(0, 8)
+    }
+    const straight = run(0)
+    const swung = run(0.75)
+    straight.forEach(([, t], i) => expect(t).toBeCloseTo(0.05 + i * 0.125))
+    swung.forEach(([st, t], i) => {
+      expect(t - straight[i][1]).toBeCloseTo(st % 2 === 1 ? 0.0625 : 0)
+    })
+  })
+
+  it('applies a tempo change while running, without restarting', () => {
+    let clock = 0
+    let bpm = 120
+    const seen: [number, number][] = []
+    const s = new Scheduler({ now: () => clock, bpm: () => bpm, onStep: (st, t) => seen.push([st, t]) })
+    s.start()
+    for (let i = 0; i < 10; i++) {
+      clock += 0.05
+      s.tick()
+    }
+    const before = seen.length
+    bpm = 60
+    for (let i = 0; i < 40; i++) {
+      clock += 0.05
+      s.tick()
+    }
+    s.stop()
+    expect(seen.map((x) => x[0]).slice(0, 5)).toEqual([0, 1, 2, 3, 4]) // no restart
+    const last = seen.length - 1
+    expect(seen[last][1] - seen[last - 1][1]).toBeCloseTo(0.25)
+    expect(seen[before - 1][1] - seen[before - 2][1]).toBeCloseTo(0.125)
+  })
+
   it('only schedules inside the look-ahead window and stops cleanly', () => {
     const seen: number[] = []
     const s = new Scheduler({ now: () => 0, bpm: 120, onStep: (st) => seen.push(st), lookahead: 0.1 })

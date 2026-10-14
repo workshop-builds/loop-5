@@ -49,3 +49,12 @@ Approved.
 - The engine reads the pattern through a ref at schedule time, so edits are heard on the next pass (at most 100 ms ahead).
 - Tests: `stepDuration` at 60, 120 and 180 BPM; the scheduler's step order, wrap after 16, spacing and look-ahead window with a mocked clock and fake timers; UI tests for Tap to start, Play and missing audio. Workflow results for this commit: `npm ci`, `npm test` (13 passed) and `npm run build` pass.
 - No wallet, signature, seed-phrase or holdings-gated features.
+
+## 2026-10-14: Milestone 3 (claude-sonnet-5-5)
+
+- `src/timing.ts`: `clampBpm` (60 to 180, whole numbers, NaN falls back to 120), `clampSwing` (0 to 0.75) and `swingOffset` (delays only odd 16th steps; 0% is straight). New `src/mix.ts`: `clampVolume` (0 to 100) and `volumeToGain` (squared curve, 0 is silent).
+- Scheduler: `bpm` and `swing` can be functions read on every tick, so tempo and swing changes apply while playing without a restart. The engine reads tempo, swing and row volumes from the app at schedule time. Each row has its own gain node, and a muted row schedules no sound.
+- UI: tempo number input plus slider (out-of-range typing is clamped, and the field shows the clamped value on blur), swing slider with a % readout, and a volume slider per row (0 reads "muted").
+- Tests: clamping, swing offsets, volume mapping, scheduler swing and live tempo change, UI controls. `npm test` (28 tests) and `npm run build` pass.
+
+Next: Milestone 4, share a pattern with a link. The state to encode is now `pattern`, `bpm`, `swing` and `volumes` (held in `App.tsx`).

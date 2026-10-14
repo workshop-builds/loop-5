@@ -1,7 +1,14 @@
-import { DEFAULT_BPM } from './timing'
+import { clampBpm, clampSwing } from './timing'
+import { volumeToGain } from './mix'
 import { Scheduler } from './scheduler'
 import { VOICES } from './voices'
 import type { Pattern } from './pattern'
+
+export interface Settings {
+  bpm: number
+  swing: number
+  volumes: number[]
+}
 
 interface Played {
   step: number
@@ -13,13 +20,14 @@ export class Engine {
   private ctx: AudioContext | null = null
   private master: GainNode | null = null
   private noise: AudioBuffer | null = null
+  private rows: GainNode[] = []
   private scheduler: Scheduler | null = null
   private queue: Played[] = []
   private current = -1
 
   constructor(
     private readonly getPattern: () => Pattern,
-    private readonly bpm = DEFAULT_BPM,
+    private readonly getSettings: () => Settings,
   ) {}
 
   // Must be called from a user gesture (tap/click).
@@ -33,6 +41,12 @@ export class Engine {
       this.master = this.ctx.createGain()
       this.master.gain.value = 0.8
       this.master.connect(this.ctx.destination)
+      const { master, ctx } = this
+      this.rows = VOICES.map(() => {
+        const g = ctx.createGain()
+        g.connect(master)
+        return g
+      })
       const len = this.ctx.sampleRate
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate)
       const d = this.noise.getChannelData(0)
@@ -53,12 +67,18 @@ export class Engine {
     this.current = -1
     this.scheduler = new Scheduler({
       now: () => ctx.currentTime,
-      bpm: this.bpm,
+      // Tempo and swing are read on every tick, so changes apply without stopping.
+      bpm: () => clampBpm(this.getSettings().bpm),
+      swing: () => clampSwing(this.getSettings().swing),
       onStep: (step, time) => {
         this.queue.push({ step, time })
-        // Read the pattern at schedule time so edits are heard on the next pass.
+        // Read the pattern and volumes at schedule time so edits are heard on the next pass.
+        const { volumes } = this.getSettings()
         this.getPattern().forEach((row, r) => {
-          if (row[step]) VOICES[r](ctx, this.master!, time, this.noise!)
+          const gain = volumeToGain(volumes[r])
+          if (!row[step] || gain === 0) return // a muted row makes no sound
+          this.rows[r].gain.setValueAtTime(gain, time)
+          VOICES[r](ctx, this.rows[r], time, this.noise!)
         })
       },
     })

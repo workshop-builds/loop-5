@@ -1,9 +1,14 @@
 import { STEPS } from './pattern'
-import { stepDuration } from './timing'
+import { stepDuration, swingOffset } from './timing'
+
+// A setting that is either fixed or read again on every tick (so it can change while playing).
+type Live = number | (() => number)
+const read = (v: Live) => (typeof v === 'function' ? v() : v)
 
 export interface SchedulerOptions {
   now: () => number
-  bpm: number
+  bpm: Live
+  swing?: Live // fraction from 0 (straight) to MAX_SWING
   onStep: (step: number, time: number) => void
   lookahead?: number // seconds scheduled ahead of the clock
   startDelay?: number // seconds between start and the first step
@@ -42,8 +47,11 @@ export class Scheduler {
   tick() {
     const horizon = this.opts.now() + this.lookahead
     while (this.nextTime < horizon) {
-      this.opts.onStep(this.next, this.nextTime)
-      this.nextTime += stepDuration(this.opts.bpm)
+      const bpm = read(this.opts.bpm)
+      const swing = this.opts.swing === undefined ? 0 : read(this.opts.swing)
+      // nextTime is the straight grid; swing only shifts when an off-beat step sounds.
+      this.opts.onStep(this.next, this.nextTime + swingOffset(this.next, bpm, swing))
+      this.nextTime += stepDuration(bpm)
       this.next = (this.next + 1) % STEPS
     }
   }
